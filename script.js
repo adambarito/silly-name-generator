@@ -111,6 +111,7 @@ function renderHistory() {
 function init() {
     document.getElementById('generate-btn').addEventListener('click', generateName);
     document.getElementById('copy-btn').addEventListener('click', copyToClipboard);
+    document.getElementById('generated-name').addEventListener('click', generateName);
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowRight') {
