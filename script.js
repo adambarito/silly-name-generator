@@ -103,6 +103,7 @@ function renderHistory() {
         li.addEventListener('click', () => {
             currentName = name;
             document.getElementById('generated-name').textContent = name;
+            copyToClipboard();
         });
         historyList.appendChild(li);
     });
