@@ -329,4 +329,8 @@ kbd {
     .name-display::after {
         font-size: 2rem;
     }
+
+    .desktop-only {
+        display: none;
+    }
 }
