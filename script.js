@@ -8,7 +8,8 @@ const adjectives = [
     'Chunky', 'Twirly', 'Sassy', 'Nifty', 'Jazzy',
     'Perky', 'Rowdy', 'Screwy', 'Tacky', 'Wonky',
     'Freaky', 'Giddy', 'Lanky', 'Moody', 'Nerdy',
-    'Pudgy', 'Rusty', 'Sleepy', 'Sneaky', 'Soggy'
+    'Pudgy', 'Rusty', 'Sleepy', 'Sneaky', 'Soggy',
+    'Flamboyant', 'Discombobulated', 'Rambunctious', 'Preposterous', 'Flabbergasted'
 ];
 
 const nouns = [
@@ -21,31 +22,127 @@ const nouns = [
     'Snorkel', 'Pebble', 'Crumpet', 'Nougat', 'Truffle',
     'Gopher', 'Ferret', 'Hamster', 'Sloth', 'Koala',
     'Avocado', 'Cabbage', 'Radish', 'Coconut', 'Pumpkin',
-    'Wizard', 'Pirate', 'Ninja', 'Robot', 'Unicorn'
+    'Wizard', 'Pirate', 'Ninja', 'Robot', 'Unicorn',
+    'Sasquatch', 'Blobfish', 'Dingleberry', 'Kerfuffle', 'Shenanigan'
+];
+
+const titles = [
+    'Sir', 'Lord', 'Captain', 'Baron', 'Princess',
+    'Doctor', 'Professor', 'Count', 'Admiral', 'Duke',
+    'Emperor', 'Grand Wizard', 'Supreme Commander', 'His Majesty', 'The Honorable'
+];
+
+const suffixes = [
+    'III', 'Jr.', 'Esquire', 'the Great', 'the Magnificent',
+    'PhD', 'DDS', 'Supreme', 'the Brave', 'the Magnificent',
+    'of Doom', 'the Unstoppable', 'McSillypants', 'von Wafflestein', 'the Unhinged'
 ];
 
 const HISTORY_KEY = 'sillyNameHistory';
 const MAX_HISTORY = 10;
 
 let currentName = '';
+let confettiPieces = [];
+let confettiCanvas, confettiCtx;
 
 function getRandomItem(array) {
     return array[Math.floor(Math.random() * array.length)];
 }
 
 function generateName() {
-    const adjective = getRandomItem(adjectives);
+    const format = Math.floor(Math.random() * 5);
+    const adj1 = getRandomItem(adjectives);
+    const adj2 = getRandomItem(adjectives.filter(a => a !== adj1));
     const noun = getRandomItem(nouns);
-    currentName = `${adjective} ${noun}`;
+
+    switch(format) {
+        case 0: // Simple: Adjective Noun
+            currentName = `${adj1} ${noun}`;
+            break;
+        case 1: // Double adj: Adjective Adjective Noun
+            currentName = `${adj1} ${adj2} ${noun}`;
+            break;
+        case 2: // Title: Title Adjective Noun
+            currentName = `${getRandomItem(titles)} ${adj1} ${noun}`;
+            break;
+        case 3: // The format: Adjective Noun the Suffix
+            currentName = `${adj1} ${noun} ${getRandomItem(suffixes)}`;
+            break;
+        case 4: // Full royal: Title Adjective Noun Suffix
+            currentName = `${getRandomItem(titles)} ${adj1} ${noun} ${getRandomItem(suffixes)}`;
+            break;
+    }
 
     const nameDisplay = document.getElementById('generated-name');
     nameDisplay.textContent = currentName;
-    nameDisplay.classList.remove('bounce');
+    nameDisplay.classList.remove('bounce', 'rainbow-text');
     void nameDisplay.offsetWidth;
-    nameDisplay.classList.add('bounce');
+    nameDisplay.classList.add('bounce', 'rainbow-text');
+
+    // Screen shake!
+    document.body.classList.add('shake');
+    setTimeout(() => document.body.classList.remove('shake'), 300);
+
+    // Confetti explosion!
+    launchConfetti();
 
     addToHistory(currentName);
     return currentName;
+}
+
+// Confetti system
+function initConfetti() {
+    confettiCanvas = document.getElementById('confetti-canvas');
+    confettiCtx = confettiCanvas.getContext('2d');
+    resizeConfetti();
+    window.addEventListener('resize', resizeConfetti);
+    animateConfetti();
+}
+
+function resizeConfetti() {
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+}
+
+function launchConfetti() {
+    const colors = ['#ff0000', '#ff7700', '#ffff00', '#00ff00', '#0077ff', '#8800ff', '#ff00ff'];
+    for (let i = 0; i < 100; i++) {
+        confettiPieces.push({
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2,
+            vx: (Math.random() - 0.5) * 20,
+            vy: (Math.random() - 0.5) * 20 - 10,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            size: Math.random() * 10 + 5,
+            rotation: Math.random() * 360,
+            rotationSpeed: (Math.random() - 0.5) * 10,
+            life: 1
+        });
+    }
+}
+
+function animateConfetti() {
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+    confettiPieces = confettiPieces.filter(p => p.life > 0);
+
+    confettiPieces.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.5; // gravity
+        p.rotation += p.rotationSpeed;
+        p.life -= 0.01;
+
+        confettiCtx.save();
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate(p.rotation * Math.PI / 180);
+        confettiCtx.fillStyle = p.color;
+        confettiCtx.globalAlpha = p.life;
+        confettiCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+        confettiCtx.restore();
+    });
+
+    requestAnimationFrame(animateConfetti);
 }
 
 function copyToClipboard() {
@@ -56,7 +153,7 @@ function copyToClipboard() {
     navigator.clipboard.writeText(currentName).then(() => {
         const copyBtn = document.getElementById('copy-btn');
         const originalText = copyBtn.textContent;
-        copyBtn.textContent = 'Copied!';
+        copyBtn.textContent = '🎉 Copied!';
         copyBtn.classList.add('copied');
 
         setTimeout(() => {
@@ -121,6 +218,7 @@ function init() {
         }
     });
 
+    initConfetti();
     renderHistory();
 }
 
